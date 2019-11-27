@@ -13,7 +13,8 @@ defined( 'ABSPATH' ) || exit;
  * Initialize the gateway.
  * @since 1.0.0
  */
-function woocommerce_truelayer_init() {
+function woocommerce_truelayer_init()
+{
 	if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
 		return;
 	}
@@ -32,7 +33,8 @@ add_action( 'plugins_loaded', 'woocommerce_truelayer_init', 0 );
  * Add plugin links
  * @since 1.0.0
  */
-function woocommerce_truelayer_plugin_links( $links ) {
+function woocommerce_truelayer_plugin_links( $links )
+{
 	$settings_url = add_query_arg(
 		array(
 			'page' => 'wc-settings',
@@ -55,7 +57,8 @@ add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'woocommerce_t
  * Add the gateway to WooCommerce
  * @since 1.0.0
  */
-function woocommerce_truelayer_add_gateway( $methods ) {
+function woocommerce_truelayer_add_gateway( $methods )
+{
 	$methods[] = 'WC_Gateway_TrueLayer';
 	return $methods;
 }
