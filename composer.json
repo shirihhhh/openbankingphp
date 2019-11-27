@@ -1,0 +1,16 @@
+{
+  "name": "signalfire/woocommerce-truelayer-gateway",
+  "description": "TrueLayer payments for Woocommerce",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+      {
+          "name": "Robert Coster",
+          "email": "rob@signalfire.co.uk"
+      }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+      "signalfire/truelayer-payments": "dev-master"
+  }
+}
