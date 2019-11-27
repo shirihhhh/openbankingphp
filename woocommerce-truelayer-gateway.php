@@ -36,11 +36,11 @@ add_action( 'plugins_loaded', 'woocommerce_truelayer_init', 0 );
 function woocommerce_truelayer_plugin_links( $links )
 {
 	$settings_url = add_query_arg(
-		array(
+		[
 			'page' => 'wc-settings',
 			'tab' => 'checkout',
 			'section' => 'wc_gateway_truelayer',
-		),
+        ],
 		admin_url( 'admin.php' )
 	);
 
