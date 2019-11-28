@@ -10,6 +10,9 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Include vendor packages
+ */
 require_once('vendor/autoload.php');
 
 /**
@@ -25,8 +28,8 @@ function woocommerce_truelayer_init()
     define( 'WC_GATEWAY_TRUELAYER_VERSION', '1.0.0' );
 
     require_once( plugin_basename( 'includes/class-wc-gateway-truelayer.php' ) );
-    #require_once( plugin_basename( 'includes/class-wc-gateway-payfast-privacy.php' ) );
-    load_plugin_textdomain( 'woocommerce-truelayer-gateway', false, trailingslashit( dirname( plugin_basename( __FILE__ ) ) ) );
+    require_once( plugin_basename( 'includes/class-wc-gateway-truelayer-privacy.php' ) );
+    load_plugin_textdomain( 'woocommerce-gateway-truelayer', false, trailingslashit( dirname( plugin_basename( __FILE__ ) ) ) );
     add_filter( 'woocommerce_payment_gateways', 'woocommerce_truelayer_add_gateway' );
 }
 
@@ -48,7 +51,7 @@ function woocommerce_truelayer_plugin_links( $links )
     );
 
     $plugin_links = array(
-        '<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woocommerce-truelayer-gateway' ) . '</a>',
+        '<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woocommerce-gateway-truelayer' ) . '</a>',
     );
 
     return array_merge( $plugin_links, $links );
