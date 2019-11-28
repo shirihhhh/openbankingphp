@@ -1,4 +1,5 @@
 <?php
+
 /**
  * TrueLayer Payment Gateway
  *
@@ -36,21 +37,11 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway
         $this->description = $this->get_option('description');
         $this->enabled = $this->get_option('enabled');
         $this->testmode = $this->get_option('testmode');
-        $this->client_id = $this->testmode ?
-            $this->get_option('test_client_id') :
-            $this->get_option('client_id');
-        $this->client_secret = $this->testmode ?
-            $this->get_option('test_client_secret') :
-            $this->get_option('client_secret');
-        $this->beneficiary_name = $this->testmode ?
-            $this->get_option('test_beneficiary_name') :
-            $this->get_option('beneficiary_name');
-        $this->beneficiary_sort_code = $this->testmode ?
-            $this->get_option('test_beneficiary_sort_code') :
-            $this->get_option('beneficiary_sort_code');
-        $this->beneficiary_account_number = $this->testmode ?
-            $this->get_option('test_beneficiary_account_number') :
-            $this->get_option('beneficiary_account_number');    
+        $this->client_id = $this->get_option('client_id');
+        $this->client_secret = $this->get_option('client_secret');
+        $this->beneficiary_name = $this->get_option('beneficiary_name');
+        $this->beneficiary_sort_code = $this->get_option('beneficiary_sort_code');
+        $this->beneficiary_account_number = $this->get_option('beneficiary_account_number');    
 
         add_action( 'woocommerce_api_truelayer', [ $this, 'webhook' ] );
         add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options' ] );
@@ -87,44 +78,24 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway
                 'default'     => 'yes',
                 'desc_tip'    => true,          
             ],
-            'test_client_id' => [
-                'title'       => 'Test Client ID',
-                'type'        => 'text'
-            ],
-            'test_client_secret' => [
-                'title'       => 'Test Client Secret',
-                'type'        => 'password',
-            ],
             'client_id' => [
-                'title'       => 'Live Client ID',
-                'type'        => 'text'
-            ],
-            'client_secret' => [
-                'title'       => 'Live Client Secret',
+                'title'       => 'Client ID',
                 'type'        => 'password'
             ],
-            'test_beneficiary_name' => [
-                'title'       => 'Test Beneficiary Name',
-                'type'        => 'text'
-            ],
-            'test_beneficiary_sort_code' => [
-                'title'       => 'Test Beneficiary Sort Code',
-                'type'        => 'text'
-            ],
-            'test_beneficiary_account_number' => [
-                'title'       => 'Test Beneficiary Account Number',
-                'type'        => 'text'
+            'client_secret' => [
+                'title'       => 'Client Secret',
+                'type'        => 'password'
             ],
             'beneficiary_name' => [
-                'title'       => 'Live Beneficiary Name',
+                'title'       => 'Beneficiary Name',
                 'type'        => 'text'
             ],
             'beneficiary_sort_code' => [
-                'title'       => 'Live Beneficiary Sort Code',
+                'title'       => 'Beneficiary Sort Code',
                 'type'        => 'text'
             ],
             'beneficiary_account_number' => [
-                'title'       => 'Live Beneficiary Account Number',
+                'title'       => 'Beneficiary Account Number',
                 'type'        => 'text'
             ],        
         ];
@@ -134,14 +105,160 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway
     {
         global $woocommerce;
         $order = wc_get_order( $order_id );
-        $total = $order->get_total();
+        $data = [
+            'amount' => (int)floor($order->get_total() * 100),
+            'currency' => 'GBP',
+            'remitter_reference' => $order->get_order_number(),
+            'beneficiary_name' => $this->settings['beneficiary_name'],
+            'beneficiary_sort_code' => $this->settings['beneficiary_sort_code'],
+            'beneficiary_account_number' => $this->settings['beneficiary_account_number'],
+            'beneficiary_reference' => $order->get_order_number(),
+            'redirect_uri' => $this->get_api_redirect_uri()
+        ];
+        $token = $this->get_api_token();
+        $payment = $this->get_api_payment($token, $data);
+
+        // Record simp_id somewhere on the order....
+        $order->set_transaction_id($this->get_api_payment_id($payment));
+        $order->save();
+
+        return [
+			'result' => 'success',
+			'redirect' => $this->get_api_payment_auth_uri($payment)
+        ];
     }
 
     public function webhook()
     {
-        //$order = wc_get_order( $_GET['id'] );
-        //$order->payment_complete();
-        //$order->reduce_order_stock();
-        die(var_dump($_GET));
+        $orders = wc_get_orders([
+            'transaction_id' => $_GET['payment_id'],
+        ]);
+
+        if (!empty($orders)){
+
+            $order = reset($orders);
+
+            $token = $this->get_api_token();
+            
+            $status = $this->get_api_payment_status($token, $order->get_transaction_id());
+
+            if (strtolower($status) === 'executed'){
+                $order->payment_complete();
+                $order->reduce_order_stock();     
+                header(sprintf('Location: %s', $this->get_webook_redirect_uri('success')));  
+            }else{
+                header(sprintf('Location: %s', $this->get_webook_redirect_uri('pending')));  
+            }
+
+        }else{
+            header(sprintf('Location: %s', $this->get_webook_redirect_uri('failed')));  
+        }
+
     }
+
+    private function get_webook_redirect_uri($status)
+    {
+        switch (strtolower($status)) {
+            case 'success':
+                return '/success';
+            case 'pending':
+                return '/pending';
+            default:
+                return '/failed';
+        }
+    }
+
+    private function get_api_redirect_uri()
+    {
+        // Dynamic this bit....
+        return 'http://wp-test.test/wc-api/truelayer';
+    }
+
+    private function get_api_urls()
+    {
+        return [
+            'auth' => $this->settings['testmode'] === 'yes' ?
+                'https://auth.truelayer-sandbox.com' :
+                'https://auth.truelayer.com',
+            'payment' => $this->settings['testmode'] === 'yes' ?
+                'https://pay-api.truelayer-sandbox.com' :
+                'https://pay-api.truelayer.com'
+        ];
+    }
+
+    private function get_api_credentials()
+    {
+        $credentials = new Signalfire\TruePayments\Credentials(
+            $this->settings['client_id'],
+            $this->settings['client_secret']
+        );
+        return $credentials;
+    }
+
+    private function get_api_request($uri)
+    {
+        return new Signalfire\TruePayments\Request([
+            'base_uri' => $uri,
+            'timeout' => 60
+        ]);
+    }
+
+    private function get_api_auth_request()
+    {
+        $urls = $this->get_api_urls();
+        return $this->get_api_request($urls['auth']);
+    }
+
+    private function get_api_payment_request()
+    {
+        $urls = $this->get_api_urls();
+        return $this->get_api_request($urls['payment']);        
+    }
+
+    private function get_api_auth()
+    {
+        $request = $this->get_api_auth_request();
+        return new Signalfire\TruePayments\Auth($request, $this->get_api_credentials());
+    }
+
+    private function get_api_token()
+    {
+        $auth = $this->get_api_auth();
+        $response = $auth->getAccessToken();
+        if (isset($response['body']['access_token'])){
+            return $response['body']['access_token'];
+        }
+    }
+
+    private function get_api_payment($token, $data)
+    {
+        $request = $this->get_api_payment_request();
+        $payment = new Signalfire\TruePayments\Payment($request, $token);  
+        return $payment->createPayment($data);
+    }
+
+    private function get_api_payment_status($token, $payment_id)
+    {
+        $request = $this->get_api_payment_request();
+        $payment = new Signalfire\TruePayments\Payment($request, $token); 
+        $response = $payment->getPaymentStatus($payment_id);
+        if (isset($response['body']['results'][0]['status'])){
+            return $response['body']['results'][0]['status'];
+        }
+    }
+
+    private function get_api_payment_auth_uri($payment)
+    {
+        if (isset($payment['body']['results'][0]['auth_uri']))
+        {
+            return $payment['body']['results'][0]['auth_uri'];
+        }
+    }
+
+    private function get_api_payment_id($payment){
+        if (isset($payment['body']['results'][0]['simp_id'])){
+            return $payment['body']['results'][0]['simp_id'];
+        }
+    }
+
 }

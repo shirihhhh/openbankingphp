@@ -9,6 +9,9 @@
  */
 
 defined( 'ABSPATH' ) || exit;
+
+require_once('vendor/autoload.php');
+
 /**
  * Initialize the gateway.
  * @since 1.0.0
