@@ -10,3 +10,4 @@ This is very much a work in progress.
 * Beneficiary and remitter references need improvements
 * Currency on data array sent to make payment needs to be from system, not hard coded
 * General tidy up / refactor
+* Add cron functionality to check status of payment (as no webhooks currently)
