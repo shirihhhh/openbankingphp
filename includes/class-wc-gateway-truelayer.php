@@ -222,7 +222,6 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 
 		if ( ! 'executed' === strtolower( $status ) ) {
 			wp_redirect($this->get_webook_redirect_uri( 'pending' ));
-			exit();
 		}
 
 		$order->payment_complete();
