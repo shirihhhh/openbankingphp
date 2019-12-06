@@ -1,4 +1,7 @@
 <?php
+
+namespace Signalfire\Woocommerce\TrueLayer;
+
 /**
  * TrueLayer Payment Gateway Privacy
  *
@@ -26,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @license  MIT
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
-class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
+class WCGatewayTrueLayerPrivacy extends \WC_Abstract_Privacy {
 	/**
 	 * Constructor
 	 */
@@ -128,4 +131,4 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 	}
 }
 
-new WC_Gateway_TrueLayer_Privacy();
+new WCGatewayTrueLayerPrivacy();

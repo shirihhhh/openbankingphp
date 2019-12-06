@@ -33,11 +33,8 @@ function woocommerce_truelayer_init() {
 	}
 
 	define( 'WC_GATEWAY_TRUELAYER_VERSION', '1.0.0' );
+	
 	define( 'WC_GATEWAY_TRUELAYER_NAME', 'woocommerce-truelayer-gateway' );
-
-	require_once plugin_basename( 'includes/class-wc-gateway-truelayer.php' );
-
-	require_once plugin_basename( 'includes/class-wc-gateway-truelayer-privacy.php' );
 
 	load_plugin_textdomain( 'woocommerce-truelayer-gateway', false, trailingslashit( WC_GATEWAY_TRUELAYER_NAME ) );
 
@@ -80,6 +77,6 @@ add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'woocommerce_t
  * @param array $methods Existing payment methods.
  */
 function woocommerce_truelayer_add_gateway( $methods ) {
-	$methods[] = 'WC_Gateway_TrueLayer';
+	$methods[] = 'Signalfire\Woocommerce\TrueLayer\WCGatewayTrueLayer';
 	return $methods;
 }
