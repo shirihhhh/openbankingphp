@@ -13,7 +13,10 @@
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
 
-defined( 'ABSPATH' ) || exit;
+//defined( 'ABSPATH' ) || exit;
+if ( ! defined('ABSPATH') ) {
+	throw new Exception('Invalid direct access');
+}
 
 /**
  * Include vendor packages
