@@ -156,7 +156,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * Validate title field
+	 * Validate text field
 	 *
 	 * @since 1.0.0
 	 *
@@ -167,16 +167,52 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 	 *
 	 * @return mixed
 	 */
-	public function validate_title_field( $key, $value ) {
-		if ( strlen( $value ) <= 3 || strlen( $value ) > 15 ) {
-			WC_Admin_Settings::add_error( __( 'Please add a title of min 4, max 15 characters', 'woocommerce-truelayer-gateway' ) );
+	public function validate_text_field( $key, $value ) {
+		$message = false;
+
+		switch ( strtolower( $key ) ) {
+			case 'title':
+				if ( strlen( $value ) <= 3 || strlen( $value ) > 15 ) {
+					$message = __( 'Please add a title of min 4, max 15 characters', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+			case 'beneficiary_name':
+				if ( strlen( $value ) <= 3 || strlen( $value ) > 40 ) {
+					$message = __( 'Beneficiary name must be a min 4, max 40 characters', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+			case 'beneficiary_sort_code':
+				if ( ! preg_match( '/^\d{6}$/', $value ) ) {
+					$message = __( 'Beneficiary sort code must be 6 digits (no dashes)', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+			case 'beneficiary_account_number':
+				if ( ! preg_match( '/^\d{8}$/', $value ) ) {
+					$message = __( 'Beneficiary account number must be 8 digits', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+			case 'success_uri':
+				if ( ! preg_match( '/^\/[A-Za-z0-9_-]*$/', $value ) ) {
+					$message = __( 'Success URL must start with / and have characters A-Z, numbers 0-9 and _ (underscore) or - (dash)', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+			case 'pending_uri':
+				if ( ! preg_match( '/^\/[A-Za-z0-9_-]*$/', $value ) ) {
+					$message = __( 'Pending URL must start with / and have characters A-Z, numbers 0-9 and _ (underscore) or - (dash)', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+		}
+
+		if ( $message ) {
+			WC_Admin_Settings::add_error( $message );
 			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );
 		}
-		return $this->validate_text_field( $key, $value );
+
+		return parent::validate_text_field( $key, $value );
 	}
 
 	/**
-	 * Validate description field
+	 * Validate textarea field
 	 *
 	 * @since 1.0.0
 	 *
@@ -187,16 +223,17 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 	 *
 	 * @return mixed
 	 */
-	public function validate_description_field( $key, $value ) {
+	public function validate_textarea_field( $key, $value ) {
 		if ( strlen( $value ) <= 9 || strlen( $value ) > 200 ) {
 			WC_Admin_Settings::add_error( __( 'Please add a description of min 10, max 200 characters', 'woocommerce-truelayer-gateway' ) );
 			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );
 		}
-		return $this->validate_textarea_field( $key, $value );
+
+		return parent::validate_textarea_field( $key, $value );
 	}
 
 	/**
-	 * Validate client_id field
+	 * Validate password field
 	 *
 	 * @since 1.0.0
 	 *
@@ -207,132 +244,28 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 	 *
 	 * @return mixed
 	 */
-	public function validate_client_id_field( $key, $value ) {
-		if ( strlen( $value ) === 0 ) {
-			WC_Admin_Settings::add_error( __( 'Please add a Truelayer Client ID', 'woocommerce-truelayer-gateway' ) );
+	public function validate_password_field( $key, $value ) {
+		$message = false;
+
+		switch ( strtolower( $key ) ) {
+			case 'client_id':
+				if ( strlen( $value ) === 0 ) {
+					$message = __( 'Please add a Truelayer Client ID', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+			case 'client_secret':
+				if ( strlen( $value ) === 0 ) {
+					$message = __( 'Please add a Truelayer Client Secret', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+		}
+
+		if ( $message ) {
+			WC_Admin_Settings::add_error( $message );
 			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );
 		}
-		return $this->validate_password_field( $key, $value );
-	}
 
-	/**
-	 * Validate client_secret field
-	 *
-	 * @since 1.0.0
-	 *
-	 * @throws Exception Exception if validation fails.
-	 *
-	 * @param string $key   Field key.
-	 * @param string $value Field value.
-	 *
-	 * @return mixed
-	 */
-	public function validate_client_secret_field( $key, $value ) {
-		if ( strlen( $value ) === 0 ) {
-			WC_Admin_Settings::add_error( __( 'Please add a Truelayer Client Secret', 'woocommerce-truelayer-gateway' ) );
-			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );
-		}
-		return $this->validate_password_field( $key, $value );
-	}
-
-	/**
-	 * Validate beneficiary name field
-	 *
-	 * @since 1.0.0
-	 *
-	 * @throws Exception Exception if validation fails.
-	 *
-	 * @param string $key   Field key.
-	 * @param string $value Field value.
-	 *
-	 * @return mixed
-	 */
-	public function validate_beneficiary_name_field( $key, $value ) {
-		if ( strlen( $value ) <= 3 || strlen( $value ) > 40 ) {
-			WC_Admin_Settings::add_error( __( 'Please add a beneficiary name of min 4, max 40 characters', 'woocommerce-truelayer-gateway' ) );
-			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );
-		}
-		return $this->validate_text_field( $key, $value );
-	}
-
-	/**
-	 * Validate beneficiary sort code field
-	 *
-	 * @since 1.0.0
-	 *
-	 * @throws Exception Exception if validation fails.
-	 *
-	 * @param string $key   Field key.
-	 * @param string $value Field value.
-	 *
-	 * @return mixed
-	 */
-	public function validate_beneficiary_sort_code_field( $key, $value ) {
-		if ( ! preg_match( '/^\d{6}$/', $value ) ) {
-			WC_Admin_Settings::add_error( __( 'Sort code must be 6 digits (no dashes)', 'woocommerce-truelayer-gateway' ) );
-			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );
-		}
-		return $this->validate_text_field( $key, $value );
-	}
-
-	/**
-	 * Validate beneficiary account number field
-	 *
-	 * @since 1.0.0
-	 *
-	 * @throws Exception Exception if validation fails.
-	 *
-	 * @param string $key   Field key.
-	 * @param string $value Field value.
-	 *
-	 * @return mixed
-	 */
-	public function validate_beneficiary_account_number_field( $key, $value ) {
-		if ( ! preg_match( '/^\d{8}$/', $value ) ) {
-			WC_Admin_Settings::add_error( __( 'Account number must be 8 digits', 'woocommerce-truelayer-gateway' ) );
-			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );
-		}
-		return $this->validate_text_field( $key, $value );
-	}
-
-	/**
-	 * Validate success uri field field
-	 *
-	 * @since 1.0.0
-	 *
-	 * @throws Exception Exception if validation fails.
-	 *
-	 * @param string $key   Field key.
-	 * @param string $value Field value.
-	 *
-	 * @return mixed
-	 */
-	public function validate_success_uri_field( $key, $value ) {
-		if ( ! preg_match( '/^\/[A-Za-z0-9_-]*$/', $value ) ) {
-			WC_Admin_Settings::add_error( __( 'Success URL must start with / and have characters A-Z, numbers 0-9 and _ (underscore) or - (dash)', 'woocommerce-truelayer-gateway' ) );
-			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );
-		}
-		return $this->validate_text_field( $key, $value );
-	}
-
-	/**
-	 * Validate pending uri field
-	 *
-	 * @since 1.0.0
-	 *
-	 * @throws Exception Exception if validation fails.
-	 *
-	 * @param string $key   Field key.
-	 * @param string $value Field value.
-	 *
-	 * @return mixed
-	 */
-	public function validate_pending_uri_field( $key, $value ) {
-		if ( ! preg_match( '/^\/[A-Za-z0-9_-]*$/', $value ) ) {
-			WC_Admin_Settings::add_error( __( 'Pending URL must start with / and have characters A-Z, numbers 0-9 and _ (underscore) or - (dash)', 'woocommerce-truelayer-gateway' ) );
-			throw new Exception( 'Invalid value: {$value}' );
-		}
-		return $this->validate_text_field( $key, $value );
+		return parent::validate_password_field( $key, $value );
 	}
 
 	/**
