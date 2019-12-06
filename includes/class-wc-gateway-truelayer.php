@@ -193,7 +193,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		$payment_id = filter_input( INPUT_GET, 'payment_id', FILTER_SANITIZE_STRING );
 
 		if ( empty( $payment_id ) ) {
-			$this->not_found_exit();
+			throw new Exception('Payment ID not provided');
 		}
 
 		$orders = wc_get_orders(
@@ -203,7 +203,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		);
 
 		if ( empty( $orders ) ) {
-			$this->not_found_exit();
+			throw new Exception('Order not found');
 		}
 
 		$order = reset( $orders );
@@ -230,6 +230,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		$woocommerce->cart->empty_cart();
 
 		wp_redirect($this->get_webook_redirect_uri( 'success' ));
+		exit();
 	}
 
 	/**
@@ -404,17 +405,6 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		if ( ! isset( $response['error'] ) && isset( $response['body']['results'][0]['status'] ) ) {
 			return $response['body']['results'][0]['status'];
 		}
-	}
-
-	/**
-	 * Throw a 404 and exit
-	 *
-	 * @since 1.0.0
-	 */
-	protected function not_found_exit() {
-		status_header( 404 );
-		nocache_headers();
-		exit();
 	}
 
 	/**
