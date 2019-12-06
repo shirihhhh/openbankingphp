@@ -31,10 +31,11 @@ function woocommerce_truelayer_init() {
 	}
 
 	define( 'WC_GATEWAY_TRUELAYER_VERSION', '1.0.0' );
+	define( 'WC_GATEWAY_TRUELAYER_NAME', 'woocommerce-truelayer-gateway');
 
 	require_once plugin_basename( 'includes/class-wc-gateway-truelayer.php' );
 	require_once plugin_basename( 'includes/class-wc-gateway-truelayer-privacy.php' );
-	load_plugin_textdomain( 'woocommerce-gateway-truelayer', false, trailingslashit( dirname( plugin_basename( __FILE__ ) ) ) );
+	load_plugin_textdomain( 'woocommerce-gateway-truelayer', false, trailingslashit( WC_GATEWAY_TRUELAYER_NAME ) );
 	add_filter( 'woocommerce_payment_gateways', 'woocommerce_truelayer_add_gateway' );
 }
 

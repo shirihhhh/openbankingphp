@@ -39,7 +39,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 	public function __construct() {
 		$this->version              = WC_GATEWAY_TRUELAYER_VERSION;
 		$this->id                   = 'truelayer';
-		$this->icon                 = WP_PLUGIN_URL . '/' . plugin_basename( dirname( dirname( __FILE__ ) ) ) . '/assets/images/icon.png';
+		$this->icon                 = WP_PLUGIN_URL . '/' . WC_GATEWAY_TRUELAYER_NAME . '/assets/images/icon.png';
 		$this->has_fields           = false;
 		$this->method_title         = 'TrueLayer Gateway';
 		$this->method_description   = 'Take payments using OpenBanking via TrueLayer';
