@@ -2,6 +2,10 @@
 
 namespace Signalfire\Woocommerce\TrueLayer;
 
+use WC_Admin_Settings;
+use Exception;
+use WC_Payment_Gateway;
+
 /**
  * TrueLayer Payment Gateway
  *
@@ -29,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @license  MIT
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
-class WCGatewayTrueLayer extends \WC_Payment_Gateway {
+class WCGatewayTrueLayer extends WC_Payment_Gateway {
 
 	/**
 	 * Version
