@@ -55,7 +55,9 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 
 		if ( $user instanceof WP_User ) {
 			$order_query['customer_id'] = (int) $user->ID;
-		} else {
+		}
+		
+		if (! $user instanceof WP_User) {
 			$order_query['billing_email'] = $email_address;
 		}
 
