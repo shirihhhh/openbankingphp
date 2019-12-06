@@ -13,10 +13,7 @@
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
 
-//defined( 'ABSPATH' ) || exit;
-if ( ! defined('ABSPATH') ) {
-	throw new Exception('Invalid direct access');
-}
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
  * Include vendor packages
@@ -34,6 +31,7 @@ function woocommerce_truelayer_init() {
 	}
 
 	define( 'WC_GATEWAY_TRUELAYER_VERSION', '1.0.0' );
+
 	define( 'WC_GATEWAY_TRUELAYER_NAME', 'woocommerce-truelayer-gateway');
 
 	require_once plugin_basename( 'includes/class-wc-gateway-truelayer.php' );

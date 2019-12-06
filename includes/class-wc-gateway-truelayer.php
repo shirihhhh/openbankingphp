@@ -22,6 +22,8 @@
  * @license  MIT
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 
 	/**
@@ -151,9 +153,9 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 			'amount'                     => (int) floor( $order->get_total() * 100 ),
 			'currency'                   => 'GBP',
 			'remitter_reference'         => $order->get_order_number(),
-			'beneficiary_name'           => $this->settings['beneficiary_name'],
-			'beneficiary_sort_code'      => $this->settings['beneficiary_sort_code'],
-			'beneficiary_account_number' => $this->settings['beneficiary_account_number'],
+			'beneficiary_name'           => sanitize_text_field($this->settings['beneficiary_name']),
+			'beneficiary_sort_code'      => sanitize_text_field($this->settings['beneficiary_sort_code']),
+			'beneficiary_account_number' => sanitize_text_field($this->settings['beneficiary_account_number']),
 			'beneficiary_reference'      => $order->get_order_number(),
 			'redirect_uri'               => $this->get_api_redirect_uri(),
 		);
