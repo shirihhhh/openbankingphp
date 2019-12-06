@@ -23,7 +23,7 @@
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+	exit();
 }
 
 class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
