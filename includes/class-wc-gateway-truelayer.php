@@ -406,19 +406,4 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 			return $response['body']['results'][0]['status'];
 		}
 	}
-
-	/**
-	 * Write error log
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param object $log Data to log.
-	 */
-	protected function write_log( $log ) {
-		if ( is_array( $log ) || is_object( $log ) ) {
-			error_log( print_r( $log, true ) );
-		} else {
-			error_log( $log );
-		}
-	}
 }

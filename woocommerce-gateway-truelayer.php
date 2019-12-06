@@ -13,7 +13,7 @@
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
 
-defined( 'ABSPATH' ) || die();
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Include vendor packages
