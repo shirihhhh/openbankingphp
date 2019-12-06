@@ -13,7 +13,9 @@
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Include vendor packages
@@ -32,11 +34,11 @@ function woocommerce_truelayer_init() {
 
 	define( 'WC_GATEWAY_TRUELAYER_VERSION', '1.0.0' );
 
-	define( 'WC_GATEWAY_TRUELAYER_NAME', 'woocommerce-truelayer-gateway');
+	define( 'WC_GATEWAY_TRUELAYER_NAME', 'woocommerce-truelayer-gateway' );
 
 	require_once plugin_basename( 'includes/class-wc-gateway-truelayer.php' );
 	require_once plugin_basename( 'includes/class-wc-gateway-truelayer-privacy.php' );
-	load_plugin_textdomain( 'woocommerce-gateway-truelayer', false, trailingslashit( WC_GATEWAY_TRUELAYER_NAME ) );
+	load_plugin_textdomain( 'woocommerce-truelayer-gateway', false, trailingslashit( WC_GATEWAY_TRUELAYER_NAME ) );
 	add_filter( 'woocommerce_payment_gateways', 'woocommerce_truelayer_add_gateway' );
 }
 
@@ -60,7 +62,7 @@ function woocommerce_truelayer_plugin_links( $links ) {
 	);
 
 	$plugin_links = array(
-		'<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woocommerce-gateway-truelayer' ) . '</a>',
+		'<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woocommerce-truelayer-gateway' ) . '</a>',
 	);
 
 	return array_merge( $plugin_links, $links );

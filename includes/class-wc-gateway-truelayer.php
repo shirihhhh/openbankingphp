@@ -22,7 +22,9 @@
  * @license  MIT
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 
@@ -43,10 +45,10 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		$this->id                   = 'truelayer';
 		$this->icon                 = WP_PLUGIN_URL . '/' . WC_GATEWAY_TRUELAYER_NAME . '/assets/images/icon.png';
 		$this->has_fields           = false;
-		$this->method_title         = 'TrueLayer Gateway';
-		$this->method_description   = 'Take payments using OpenBanking via TrueLayer';
+		$this->method_title         = __( 'TrueLayer Gateway', 'woocommerce-truelayer-gateway' );
+		$this->method_description   = __( 'Take payments using OpenBanking via TrueLayer', 'woocommerce-truelayer-gateway' );
 		$this->available_countries  = array( 'GB' );
-		$this->available_currencies = (array) apply_filters( 'woocommerce_gateway_payfast_available_currencies', array( 'GBP' ) );
+		$this->available_currencies = (array) apply_filters( 'woocommerce_gateway_truelayer_available_currencies', array( 'GBP' ) );
 
 		$this->supports = array(
 			'products',
@@ -59,6 +61,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		$this->description                = $this->get_option( 'description' );
 		$this->enabled                    = $this->get_option( 'enabled' );
 		$this->testmode                   = $this->get_option( 'testmode' );
+		$this->currency                   = $this->get_option( 'currency' );
 		$this->client_id                  = $this->get_option( 'client_id' );
 		$this->client_secret              = $this->get_option( 'client_secret' );
 		$this->beneficiary_name           = $this->get_option( 'beneficiary_name' );
@@ -77,60 +80,77 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 	public function init_form_fields() {
 		$this->form_fields = array(
 			'enabled'                    => array(
-				'title'       => 'Enable/Disable',
-				'label'       => 'Enable TrueLayer Gateway',
 				'type'        => 'checkbox',
-				'description' => '',
+				'title'       => __( 'Enable/Disable', 'woocommerce-truelayer-gateway' ),
+				'label'       => __( 'Enable TrueLayer Gateway', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Enable or disable the ability to take payments via TrueLayer', 'woocommerce-truelayer-gateway' ),
 				'default'     => 'no',
 			),
 			'title'                      => array(
-				'title'       => 'Title',
 				'type'        => 'text',
-				'description' => 'This controls the title which the user sees during checkout.',
-				'default'     => 'OpenBanking',
+				'title'       => __( 'Title', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'This controls the title which the user sees during checkout.', 'woocommerce-truelayer-gateway' ),
+				'default'     => __( 'OpenBanking', 'woocommerce-truelayer-gateway' ),
 				'desc_tip'    => true,
 			),
 			'description'                => array(
-				'title'       => 'Description',
 				'type'        => 'textarea',
-				'description' => 'This controls the description which the user sees during checkout.',
-				'default'     => 'Pay using OpenBanking via TrueLayer',
+				'title'       => __( 'Description', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'This controls the description which the user sees during checkout.', 'woocommerce-truelayer-gateway' ),
+				'default'     => __( 'Pay using OpenBanking via TrueLayer', 'woocommerce-truelayer-gateway' ),
 			),
 			'testmode'                   => array(
-				'title'       => 'Test mode',
-				'label'       => 'Enable Test Mode',
 				'type'        => 'checkbox',
-				'description' => 'Place the payment gateway in test mode using test client keys.',
+				'title'       => __( 'Test mode', 'woocommerce-truelayer-gateway' ),
+				'label'       => __( 'Enable Test Mode', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Place the payment gateway in test mode using test client keys.', 'woocommerce-truelayer-gateway' ),
 				'default'     => 'yes',
 				'desc_tip'    => true,
 			),
+			'currency'                   => array(
+				'type'        => 'select',
+				'title'       => __( 'Currency', 'woocommerce-truelayer-gateway' ),
+				'label'       => __( 'Currency', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Choose currency to transact in', 'woocommerce-truelayer-gateway' ),
+				'default'     => 'GBP',
+				'options'     => array(
+					'GBP' => 'Pound Sterling',
+				),
+			),
 			'client_id'                  => array(
-				'title' => 'Client ID',
-				'type'  => 'password',
+				'type'        => 'password',
+				'title'       => __( 'Client ID', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Enter client id from TrueLayer', 'woocommerce-truelayer-gateway' ),
 			),
 			'client_secret'              => array(
-				'title' => 'Client Secret',
-				'type'  => 'password',
+				'type'        => 'password',
+				'title'       => __( 'Client Secret', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Enter client secret from TrueLayer', 'woocommerce-truelayer-gateway' ),
 			),
 			'beneficiary_name'           => array(
-				'title' => 'Beneficiary Name',
-				'type'  => 'text',
+				'type'        => 'text',
+				'title'       => __( 'Beneficiary Name', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Enter beneficiary bank name', 'woocommerce-truelayer-gateway' ),
 			),
 			'beneficiary_sort_code'      => array(
-				'title' => 'Beneficiary Sort Code',
-				'type'  => 'text',
+				'type'        => 'text',
+				'title'       => __( 'Beneficiary Sort Code', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Enter beneficiary sort code (exclude -)', 'woocommerce-truelayer-gateway' ),
 			),
 			'beneficiary_account_number' => array(
-				'title' => 'Beneficiary Account Number',
-				'type'  => 'text',
+				'type'        => 'text',
+				'title'       => __( 'Beneficiary Account Number', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Enter beneficiary account number', 'woocommerce-truelayer-gateway' ),
 			),
 			'success_uri'                => array(
-				'title' => 'Successful Redirect URL',
-				'type'  => 'text',
+				'type'        => 'text',
+				'title'       => __( 'Successful Redirect URL', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Page to redirect to on success', 'woocommerce-truelayer-gateway' ),
 			),
 			'pending_uri'                => array(
-				'title' => 'Pending Redirect URL',
-				'type'  => 'text',
+				'type'        => 'text',
+				'title'       => __( 'Pending Redirect URL', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Page to redirect to on pending', 'woocommerce-truelayer-gateway' ),
 			),
 		);
 	}
@@ -151,11 +171,11 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 
 		$data = array(
 			'amount'                     => (int) floor( $order->get_total() * 100 ),
-			'currency'                   => 'GBP',
+			'currency'                   => sanitize_text_field( $this->currency ),
 			'remitter_reference'         => $order->get_order_number(),
-			'beneficiary_name'           => sanitize_text_field($this->settings['beneficiary_name']),
-			'beneficiary_sort_code'      => sanitize_text_field($this->settings['beneficiary_sort_code']),
-			'beneficiary_account_number' => sanitize_text_field($this->settings['beneficiary_account_number']),
+			'beneficiary_name'           => sanitize_text_field( $this->beneficiary_name ),
+			'beneficiary_sort_code'      => sanitize_text_field( $this->beneficiary_sort_code ),
+			'beneficiary_account_number' => sanitize_text_field( $this->beneficiary_account_number ),
 			'beneficiary_reference'      => $order->get_order_number(),
 			'redirect_uri'               => $this->get_api_redirect_uri(),
 		);
@@ -195,7 +215,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		$payment_id = filter_input( INPUT_GET, 'payment_id', FILTER_SANITIZE_STRING );
 
 		if ( empty( $payment_id ) ) {
-			throw new Exception('Payment ID not provided');
+			throw new Exception( 'Payment ID not provided' );
 		}
 
 		$orders = wc_get_orders(
@@ -205,7 +225,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		);
 
 		if ( empty( $orders ) ) {
-			throw new Exception('Order not found');
+			throw new Exception( 'Order not found' );
 		}
 
 		$order = reset( $orders );
@@ -223,7 +243,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		}
 
 		if ( ! 'executed' === strtolower( $status ) ) {
-			wp_redirect($this->get_webook_redirect_uri( 'pending' ));
+			wp_redirect( $this->get_webook_redirect_uri( 'pending' ) );
 			wp_die();
 		}
 
@@ -231,7 +251,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		$order->reduce_order_stock();
 		$woocommerce->cart->empty_cart();
 
-		wp_redirect($this->get_webook_redirect_uri( 'success' ));
+		wp_redirect( $this->get_webook_redirect_uri( 'success' ) );
 		wp_die();
 	}
 

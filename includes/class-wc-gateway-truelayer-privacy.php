@@ -11,7 +11,9 @@
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 if ( ! class_exists( 'WC_Abstract_Privacy' ) ) {
 	return;
@@ -33,9 +35,9 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 	 * Constructor
 	 */
 	public function __construct() {
-		parent::__construct( __( 'TrueLayer', 'woocommerce-gateway-truelayer' ) );
-		$this->add_exporter( 'woocommerce-gateway-truelayer-order-data', __( 'WooCommerce TrueLayer Order Data', 'woocommerce-gateway-truelayer' ), array( $this, 'order_data_exporter' ) );
-		$this->add_eraser( 'woocommerce-gateway-truelayer-order-data', __( 'WooCommerce TrueLayer Data', 'woocommerce-gateway-truelayer' ), array( $this, 'order_data_eraser' ) );
+		parent::__construct( __( 'TrueLayer', 'woocommerce-truelayer-gateway' ) );
+		$this->add_exporter( 'woocommerce-truelayer-gateway-order-data', __( 'WooCommerce TrueLayer Order Data', 'woocommerce-truelayer-gateway' ), array( $this, 'order_data_exporter' ) );
+		$this->add_eraser( 'woocommerce-truelayer-gateway-order-data', __( 'WooCommerce TrueLayer Data', 'woocommerce-truelayer-gateway' ), array( $this, 'order_data_eraser' ) );
 	}
 
 	/**
@@ -59,7 +61,7 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 			$order_query['customer_id'] = (int) $user->ID;
 		}
 
-		if (! $user instanceof WP_User) {
+		if ( ! $user instanceof WP_User ) {
 			$order_query['billing_email'] = $email_address;
 		}
 
@@ -71,7 +73,7 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 	 */
 	public function get_privacy_message() {
 		/* translators: %s: url */
-		return wpautop( sprintf( __( 'By using this extension, you may be storing personal data or sharing data with an external service. <a href="%s" target="_blank">Learn more about how this works, including what you may want to include in your privacy policy.</a>', 'woocommerce-gateway-truelayer' ), 'https://docs.woocommerce.com/document/privacy-payments/#woocommerce-gateway-truelayer' ) );
+		return wpautop( sprintf( __( 'By using this extension, you may be storing personal data or sharing data with an external service. <a href="%s" target="_blank">Learn more about how this works, including what you may want to include in your privacy policy.</a>', 'woocommerce-truelayer-gateway' ), 'https://docs.woocommerce.com/document/privacy-payments/#woocommerce-truelayer-gateway' ) );
 	}
 
 	/**
@@ -92,7 +94,7 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 			foreach ( $orders as $order ) {
 				$data_to_export[] = array(
 					'group_id'    => 'woocommerce_orders',
-					'group_label' => __( 'Orders', 'woocommerce-gateway-truelayer' ),
+					'group_label' => __( 'Orders', 'woocommerce-truelayer-gateway' ),
 					'item_id'     => 'order-' . $order->get_id(),
 				);
 			}
