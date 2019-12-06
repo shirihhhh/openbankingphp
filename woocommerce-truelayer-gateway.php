@@ -33,8 +33,10 @@ function woocommerce_truelayer_init() {
 	}
 
 	define( 'WC_GATEWAY_TRUELAYER_VERSION', '1.0.0' );
-	
+
 	define( 'WC_GATEWAY_TRUELAYER_NAME', 'woocommerce-truelayer-gateway' );
+
+	new Signalfire\Woocommerce\TrueLayer\WCGatewayTrueLayerPrivacy();
 
 	load_plugin_textdomain( 'woocommerce-truelayer-gateway', false, trailingslashit( WC_GATEWAY_TRUELAYER_NAME ) );
 

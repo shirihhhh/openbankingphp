@@ -132,5 +132,3 @@ class WCGatewayTrueLayerPrivacy extends WC_Abstract_Privacy {
 		);
 	}
 }
-
-new WCGatewayTrueLayerPrivacy();
