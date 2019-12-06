@@ -28,17 +28,19 @@ require_once 'vendor/autoload.php';
  * @since 1.0.0
  */
 function woocommerce_truelayer_init() {
-	if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
+	if ( ! class_exists( 'WC_Payment_Gateway' ) || ! class_exists('WC_Abstract_Privacy') ) {
 		return;
 	}
 
 	define( 'WC_GATEWAY_TRUELAYER_VERSION', '1.0.0' );
-
 	define( 'WC_GATEWAY_TRUELAYER_NAME', 'woocommerce-truelayer-gateway' );
 
 	require_once plugin_basename( 'includes/class-wc-gateway-truelayer.php' );
+	
 	require_once plugin_basename( 'includes/class-wc-gateway-truelayer-privacy.php' );
+
 	load_plugin_textdomain( 'woocommerce-truelayer-gateway', false, trailingslashit( WC_GATEWAY_TRUELAYER_NAME ) );
+	
 	add_filter( 'woocommerce_payment_gateways', 'woocommerce_truelayer_add_gateway' );
 }
 

@@ -15,10 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit();
 }
 
-if ( ! class_exists( 'WC_Abstract_Privacy' ) ) {
-	return;
-}
-
 /**
  * TrueLayer Payment Gateway
  *
