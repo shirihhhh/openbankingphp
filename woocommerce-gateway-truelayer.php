@@ -6,6 +6,11 @@
  * Author: Robert Coster
  * Author URI: https://signalfire.co.uk
  * Version: 1.0.0
+ *
+ * @package  woocommerce-truelayer-gateway
+ * @author   Robert Coster
+ * @license  MIT
+ * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -13,58 +18,62 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Include vendor packages
  */
-require_once('vendor/autoload.php');
+require_once 'vendor/autoload.php';
 
 /**
- * Initialize the gateway.
+ * Initialize the gateway
+ *
  * @since 1.0.0
  */
-function woocommerce_truelayer_init()
-{
-    if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
-        return;
-    }
+function woocommerce_truelayer_init() {
+	if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
+		return;
+	}
 
-    define( 'WC_GATEWAY_TRUELAYER_VERSION', '1.0.0' );
+	define( 'WC_GATEWAY_TRUELAYER_VERSION', '1.0.0' );
 
-    require_once( plugin_basename( 'includes/class-wc-gateway-truelayer.php' ) );
-    require_once( plugin_basename( 'includes/class-wc-gateway-truelayer-privacy.php' ) );
-    load_plugin_textdomain( 'woocommerce-gateway-truelayer', false, trailingslashit( dirname( plugin_basename( __FILE__ ) ) ) );
-    add_filter( 'woocommerce_payment_gateways', 'woocommerce_truelayer_add_gateway' );
+	require_once plugin_basename( 'includes/class-wc-gateway-truelayer.php' );
+	require_once plugin_basename( 'includes/class-wc-gateway-truelayer-privacy.php' );
+	load_plugin_textdomain( 'woocommerce-gateway-truelayer', false, trailingslashit( dirname( plugin_basename( __FILE__ ) ) ) );
+	add_filter( 'woocommerce_payment_gateways', 'woocommerce_truelayer_add_gateway' );
 }
 
 add_action( 'plugins_loaded', 'woocommerce_truelayer_init', 0 );
 
 /**
  * Add plugin links
+ *
  * @since 1.0.0
+ *
+ * @param array $links Array of links.
  */
-function woocommerce_truelayer_plugin_links( $links )
-{
-    $settings_url = add_query_arg(
-        [
-            'page' => 'wc-settings',
-            'tab' => 'checkout',
-            'section' => 'wc_gateway_truelayer',
-        ],
-        admin_url( 'admin.php' )
-    );
+function woocommerce_truelayer_plugin_links( $links ) {
+	$settings_url = add_query_arg(
+		array(
+			'page'    => 'wc-settings',
+			'tab'     => 'checkout',
+			'section' => 'wc_gateway_truelayer',
+		),
+		admin_url( 'admin.php' )
+	);
 
-    $plugin_links = array(
-        '<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woocommerce-gateway-truelayer' ) . '</a>',
-    );
+	$plugin_links = array(
+		'<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woocommerce-gateway-truelayer' ) . '</a>',
+	);
 
-    return array_merge( $plugin_links, $links );
+	return array_merge( $plugin_links, $links );
 }
 
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'woocommerce_truelayer_plugin_links' );
 
 /**
  * Add the gateway to WooCommerce
+ *
  * @since 1.0.0
+ *
+ * @param array $methods Existing payment methods.
  */
-function woocommerce_truelayer_add_gateway( $methods )
-{
-    $methods[] = 'WC_Gateway_TrueLayer';
-    return $methods;
+function woocommerce_truelayer_add_gateway( $methods ) {
+	$methods[] = 'WC_Gateway_TrueLayer';
+	return $methods;
 }

@@ -9,8 +9,17 @@
           "email": "rob@signalfire.co.uk"
       }
   ],
+  "scripts": {
+    "sniff": "./vendor/bin/phpcs --standard=WordPress --ignore=*/tests/*,*/vendor/* ./",
+    "sniff:fix": "./vendor/bin/phpcbf --standard=WordPress --ignore=*/tests/*,*/vendor/* ./"        
+  },
   "minimum-stability": "dev",
   "require": {
       "signalfire/truelayer-payments": "dev-master"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "3.*",
+    "dealerdirect/phpcodesniffer-composer-installer": "dev-master",
+    "wp-coding-standards/wpcs": "dev-master"
   }
 }

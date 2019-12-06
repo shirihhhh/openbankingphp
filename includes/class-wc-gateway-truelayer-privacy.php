@@ -1,12 +1,34 @@
 <?php
+/**
+ * TrueLayer Payment Gateway Privacy
+ *
+ * Provides for TrueLayer Payment Gateway Privacy.
+ *
+ * @category WC_Gateway_TrueLayer_Privacy
+ * @package  woocommerce-truelayer-gateway
+ * @author   Robert Coster
+ * @license  MIT
+ * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
+ */
+
 if ( ! class_exists( 'WC_Abstract_Privacy' ) ) {
 	return;
 }
 
+/**
+ * TrueLayer Payment Gateway
+ *
+ * Provides for TrueLayer Payment Gateway Privacy.
+ *
+ * @category Class
+ * @package  WC_Gateway_TrueLayer_Privacy
+ * @author   Robert Coster
+ * @license  MIT
+ * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
+ */
 class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 	/**
 	 * Constructor
-	 *
 	 */
 	public function __construct() {
 		parent::__construct( __( 'TrueLayer', 'woocommerce-gateway-truelayer' ) );
@@ -17,20 +39,19 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 	/**
 	 * Returns a list of orders that are using one of PayFast's payment methods.
 	 *
-	 * @param string  $email_address
-	 * @param int     $page
+	 * @param string $email_address Email address to get orders for.
+	 * @param int    $page          Page to get of orders.
 	 *
 	 * @return array WP_Post
 	 */
-    protected function get_truelayer_orders( $email_address, $page )
-    {
+	protected function get_truelayer_orders( $email_address, $page ) {
 		$user = get_user_by( 'email', $email_address ); // Check if user has an ID in the DB to load stored personal data.
 
-		$order_query = [
+		$order_query = array(
 			'payment_method' => 'truelayer',
-			'limit' => 10,
-			'page' => $page,
-        ];
+			'limit'          => 10,
+			'page'           => $page,
+		);
 
 		if ( $user instanceof WP_User ) {
 			$order_query['customer_id'] = (int) $user->ID;
@@ -43,10 +64,9 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 
 	/**
 	 * Gets the message of the privacy to display.
-	 *
 	 */
-    public function get_privacy_message()
-    {
+	public function get_privacy_message() {
+		/* translators: %s: url */
 		return wpautop( sprintf( __( 'By using this extension, you may be storing personal data or sharing data with an external service. <a href="%s" target="_blank">Learn more about how this works, including what you may want to include in your privacy policy.</a>', 'woocommerce-gateway-truelayer' ), 'https://docs.woocommerce.com/document/privacy-payments/#woocommerce-gateway-truelayer' ) );
 	}
 
@@ -58,29 +78,28 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 	 *
 	 * @return array
 	 */
-    public function order_data_exporter( $email_address, $page = 1 )
-    {
-		$done = false;
-		$data_to_export = [];
-		$orders = $this->get_truelayer_orders( $email_address, (int) $page );
-		$done = true;
+	public function order_data_exporter( $email_address, $page = 1 ) {
+		$done           = false;
+		$data_to_export = array();
+		$orders         = $this->get_truelayer_orders( $email_address, (int) $page );
+		$done           = true;
 
 		if ( 0 < count( $orders ) ) {
 			foreach ( $orders as $order ) {
-				$data_to_export[] = [
-					'group_id' => 'woocommerce_orders',
+				$data_to_export[] = array(
+					'group_id'    => 'woocommerce_orders',
 					'group_label' => __( 'Orders', 'woocommerce-gateway-truelayer' ),
-					'item_id' => 'order-' . $order->get_id(),
-                ];
+					'item_id'     => 'order-' . $order->get_id(),
+				);
 			}
 
 			$done = 10 > count( $orders );
 		}
 
-		return [
+		return array(
 			'data' => $data_to_export,
 			'done' => $done,
-        ];
+		);
 	}
 
 	/**
@@ -91,21 +110,19 @@ class WC_Gateway_TrueLayer_Privacy extends WC_Abstract_Privacy {
 	 * @param int    $page  Page.
 	 * @return array An array of personal data in name value pairs
 	 */
-    public function order_data_eraser( $email_address, $page )
-    {
-		$orders = $this->get_truelayer_orders( $email_address, (int) $page );
-		$items_removed = false;
+	public function order_data_eraser( $email_address, $page ) {
+		$orders         = $this->get_truelayer_orders( $email_address, (int) $page );
+		$items_removed  = false;
 		$items_retained = false;
 
-		// Tell core if we have more orders to work on still
 		$done = count( $orders ) < 10;
 
-		return [
-			'items_removed' => $items_removed,
+		return array(
+			'items_removed'  => $items_removed,
 			'items_retained' => $items_retained,
-			'messages' => [],
-			'done' => $done,
-        ];
+			'messages'       => array(),
+			'done'           => $done,
+		);
 	}
 }
 
