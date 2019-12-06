@@ -230,7 +230,6 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		$woocommerce->cart->empty_cart();
 
 		wp_redirect($this->get_webook_redirect_uri( 'success' ));
-		exit();
 	}
 
 	/**
