@@ -220,14 +220,16 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 			throw new Exception( 'Unable to get TrueLayer payment status' );
 		}
 
-		if ( strtolower( $status ) === 'executed' ) {
-			$order->payment_complete();
-			$order->reduce_order_stock();
-			$woocommerce->cart->empty_cart();
-			header( sprintf( 'Location: %s', $this->get_webook_redirect_uri( 'success' ) ) );
-		} else {
-			header( sprintf( 'Location: %s', $this->get_webook_redirect_uri( 'pending' ) ) );
+		if ( ! 'executed' === strtolower( $status ) ) {
+			wp_redirect($this->get_webook_redirect_uri( 'pending' ));
+			exit();
 		}
+
+		$order->payment_complete();
+		$order->reduce_order_stock();
+		$woocommerce->cart->empty_cart();
+
+		wp_redirect($this->get_webook_redirect_uri( 'success' ));
 	}
 
 	/**
