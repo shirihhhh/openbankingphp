@@ -243,7 +243,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		}
 
 		if ( ! 'executed' === strtolower( $status ) ) {
-			wp_redirect( $this->get_webook_redirect_uri( 'pending' ) );
+			wp_safe_redirect( $this->get_webook_redirect_uri( 'pending' ) );
 			wp_die();
 		}
 
@@ -251,7 +251,7 @@ class WC_Gateway_TrueLayer extends WC_Payment_Gateway {
 		$order->reduce_order_stock();
 		$woocommerce->cart->empty_cart();
 
-		wp_redirect( $this->get_webook_redirect_uri( 'success' ) );
+		wp_safe_redirect( $this->get_webook_redirect_uri( 'success' ) );
 		wp_die();
 	}
 
