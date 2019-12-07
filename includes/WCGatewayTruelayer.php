@@ -183,6 +183,17 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	}
 
 	/**
+	 * Ensure go to settings field before enabling gateway
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool
+	 */
+	public function needs_setup() {
+		return true;
+	}
+
+	/**
 	 * Validate text field
 	 *
 	 * @since 1.0.0
@@ -352,8 +363,8 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 * @return bool
 	 */
 	public function is_valid_for_use() {
-		$is_available          = false;
-		$is_currency = in_array( get_woocommerce_currency(), $this->available_currencies, true );
+		$is_available = false;
+		$is_currency  = in_array( get_woocommerce_currency(), $this->available_currencies, true );
 
 		if ( $is_currency && $this->has_required_settings() ) {
 			$is_available = true;
