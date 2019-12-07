@@ -71,7 +71,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 
 		$this->title                      = $this->get_option( 'title' );
 		$this->description                = $this->get_option( 'description' );
-		$this->testmode                   = $this->get_option( 'testmode' );	
+		$this->testmode                   = $this->get_option( 'testmode' );
 		$this->currency                   = $this->get_option( 'currency' );
 		$this->remitter_reference         = $this->get_option( 'remitter_reference' );
 		$this->client_id                  = $this->get_option( 'client_id' );
@@ -82,7 +82,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$this->beneficiary_reference      = $this->get_option( 'beneficiary_reference' );
 		$this->success_uri                = $this->get_option( 'success_uri' );
 		$this->pending_uri                = $this->get_option( 'pending_uri' );
-		$this->enabled          		  = $this->get_option( 'enabled' );
+		$this->enabled                    = $this->get_option( 'enabled' );
 
 		add_action( 'woocommerce_api_truelayer', array( $this, 'webhook' ) );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
@@ -251,10 +251,20 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		return parent::validate_text_field( $key, $value );
 	}
 
-	public function validate_checkbox_field($key, $value) {
-		if ($key === 'enabled' && !$this->is_valid_for_use()) {
+	/**
+	 * Validate checkbox fields
+	 *
+	 * @throws Exception Exception if validation fails.
+	 *
+	 * @param string $key   Field key.
+	 * @param string $value Field value.
+	 *
+	 * @return mixed
+	 */
+	public function validate_checkbox_field( $key, $value ) {
+		if ( 'enabled' === $key && ! $this->is_valid_for_use() ) {
 			WC_Admin_Settings::add_error( __( 'Unable to enable gateway, check fields have required configuration values', 'woocommerce-truelayer-gateway' ) );
-			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );	
+			throw new Exception( __( 'Invalid value: {$value}', 'woocommerce-truelayer-gateway' ) );
 		}
 		return parent::validate_checkbox_field( $key, $value );
 	}
@@ -316,11 +326,17 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		return parent::validate_password_field( $key, $value );
 	}
 
-	protected function has_required_settings()
-	{
-		foreach($this->form_fields as $key => $field) {
-			if (in_array($field['type'], ['text', 'textarea', 'password'])){
-				if (empty($this->{$key})){
+	/**
+	 * Checks required fields are provided
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool
+	 */
+	protected function has_required_settings() {
+		foreach ( $this->form_fields as $key => $field ) {
+			if ( in_array( $field['type'], array( 'text', 'textarea', 'password' ), true ) ) {
+				if ( empty( $this->{$key} ) ) {
 					return false;
 				}
 			}
@@ -337,9 +353,9 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 */
 	public function is_valid_for_use() {
 		$is_available          = false;
-		$is_available_currency = in_array( get_woocommerce_currency(), $this->available_currencies );
+		$is_available_currency = in_array( get_woocommerce_currency(), $this->available_currencies, true );
 
-		if ( $is_available_currency && $this->has_required_settings()) {
+		if ( $is_available_currency && $this->has_required_settings() ) {
 			$is_available = true;
 		}
 
@@ -352,13 +368,16 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 * @since 1.0.0
 	 */
 	public function admin_options() {
-		if ( in_array( get_woocommerce_currency(), $this->available_currencies ) ) {
-			parent::admin_options();
-		} else {
-		?>
-			<h3><?php _e( 'TrueLayer', 'woocommerce-truelayer-gateway' ); ?></h3>
-			<div class="inline error"><p><strong><?php _e( 'Gateway Disabled', 'woocommerce-truelayer-gateway' ); ?></strong> <?php /* translators: 1: a href link 2: closing href */ echo sprintf( __( 'Choose Pound Sterling as your store currency in %1$sGeneral Settings%2$s to enable the TrueLayer Gateway.', 'woocommerce-truelayer-gateway' ), '<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=general' ) ) . '">', '</a>' ); ?></p></div>
-			<?php
+		$supported = in_array( get_woocommerce_currency(), $this->available_currencies, true );
+		switch ( $supported ) {
+			case true:
+				parent::admin_options();
+				break;
+			case false:
+				?>
+				<h3><?php esc_html_e( 'TrueLayer', 'woocommerce-truelayer-gateway' ); ?></h3>
+				<div class="inline error"><p><strong><?php esc_html_e( 'Gateway Disabled', 'woocommerce-truelayer-gateway' ); ?></strong> <?php /* translators: 1: a href link 2: closing href */ echo sprintf( esc_html_e( 'Choose Pound Sterling as your store currency in %1$sGeneral Settings%2$s to enable the TrueLayer Gateway.', 'woocommerce-truelayer-gateway' ), '<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=general' ) ) . '">', '</a>' ); ?></p></div>
+				<?php
 		}
 	}
 
@@ -451,7 +470,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 
 		if ( ! 'executed' === strtolower( $status ) ) {
 			wp_safe_redirect( $this->get_webook_redirect_uri( 'pending' ) );
-			exit();
+			return;
 		}
 
 		$order->payment_complete();
@@ -461,7 +480,6 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$woocommerce->cart->empty_cart();
 
 		wp_safe_redirect( $this->get_webook_redirect_uri( 'success' ) );
-		exit();
 	}
 
 	/**
