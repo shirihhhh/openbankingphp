@@ -376,7 +376,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 			case false:
 				?>
 				<h3><?php esc_html_e( 'TrueLayer', 'woocommerce-truelayer-gateway' ); ?></h3>
-				<div class="inline error"><p><strong><?php esc_html_e( 'Gateway Disabled', 'woocommerce-truelayer-gateway' ); ?></strong> <?php /* translators: 1: a href link 2: closing href */ echo sprintf( esc_html_e( 'Choose Pound Sterling as your store currency in %1$sGeneral Settings%2$s to enable the TrueLayer Gateway.', 'woocommerce-truelayer-gateway' ), '<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=general' ) ) . '">', '</a>' ); ?></p></div>
+				<div class="inline error"><p><strong><?php esc_html_e( 'Gateway Disabled', 'woocommerce-truelayer-gateway' ); ?></strong> <?php esc_html_e( 'Choose Pound Sterling as your store currency in General Settings to enable the TrueLayer Gateway.', 'woocommerce-truelayer-gateway' ); ?></p></div>
 				<?php
 		}
 	}
