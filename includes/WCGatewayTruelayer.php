@@ -1,11 +1,4 @@
 <?php
-
-namespace Signalfire\Woocommerce\TrueLayer;
-
-use WC_Admin_Settings;
-use Exception;
-use WC_Payment_Gateway;
-
 /**
  * TrueLayer Payment Gateway
  *
@@ -17,6 +10,18 @@ use WC_Payment_Gateway;
  * @license  MIT
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
  */
+
+namespace Signalfire\Woocommerce\TrueLayer;
+
+use Exception;
+
+use WC_Admin_Settings;
+use WC_Payment_Gateway;
+
+use Signalfire\TruePayments\Credentials;
+use Signalfire\TruePayments\Request;
+use Signalfire\TruePayments\Auth;
+use Signalfire\TruePayments\Payment;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	return;
@@ -64,16 +69,20 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$this->init_form_fields();
 		$this->init_settings();
 
+		$this->enabled                    = $this->get_option( 'enabled' );
 		$this->title                      = $this->get_option( 'title' );
 		$this->description                = $this->get_option( 'description' );
-		$this->enabled                    = $this->get_option( 'enabled' );
 		$this->testmode                   = $this->get_option( 'testmode' );
 		$this->currency                   = $this->get_option( 'currency' );
+		$this->remitter_reference         = $this->get_option( 'remitter_reference' );
 		$this->client_id                  = $this->get_option( 'client_id' );
 		$this->client_secret              = $this->get_option( 'client_secret' );
 		$this->beneficiary_name           = $this->get_option( 'beneficiary_name' );
 		$this->beneficiary_sort_code      = $this->get_option( 'beneficiary_sort_code' );
 		$this->beneficiary_account_number = $this->get_option( 'beneficiary_account_number' );
+		$this->beneficiary_reference      = $this->get_option( 'beneficiary_reference' );
+		$this->success_uri                = $this->get_option( 'success_uri' );
+		$this->pending_uri                = $this->get_option( 'pending_uri' );
 
 		add_action( 'woocommerce_api_truelayer', array( $this, 'webhook' ) );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
@@ -124,6 +133,11 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 					'GBP' => 'Pound Sterling',
 				),
 			),
+			'remitter_reference'         => array(
+				'type'        => 'text',
+				'title'       => __( 'Remitter Reference', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Enter a reference to uniquely identify this transaction. Include string placeholder once to include Order ID', 'woocommerce-truelayer-gateway' ),
+			),
 			'client_id'                  => array(
 				'type'        => 'password',
 				'title'       => __( 'Client ID', 'woocommerce-truelayer-gateway' ),
@@ -148,6 +162,11 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 				'type'        => 'text',
 				'title'       => __( 'Beneficiary Account Number', 'woocommerce-truelayer-gateway' ),
 				'description' => __( 'Enter beneficiary account number', 'woocommerce-truelayer-gateway' ),
+			),
+			'beneficiary_reference'      => array(
+				'type'        => 'text',
+				'title'       => __( 'Beneficiary Reference', 'woocommerce-truelayer-gateway' ),
+				'description' => __( 'Enter a reference to be displayed on payees bank statement.', 'woocommerce-truelayer-gateway' ),
 			),
 			'success_uri'                => array(
 				'type'        => 'text',
@@ -180,7 +199,15 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		switch ( strtolower( $key ) ) {
 			case 'title':
 				if ( strlen( $value ) <= 3 || strlen( $value ) > 15 ) {
-					$message = __( 'Please add a title of min 4, max 15 characters', 'woocommerce-truelayer-gateway' );
+					$message = __( 'Title must be a min 4, max 15 characters', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+			case 'remitter_reference':
+				if ( strlen( $value ) <= 3 || strlen( $value ) > 20 ) {
+					$message = __( 'Remitter reference must be a min of 4, max 20 characters', 'woocommerce-truelayer-gateway' );
+				}
+				if ( substr_count( $value, '%s' ) > 1 ) {
+					$message = __( 'Remitter reference can include only 1 string placeholder', 'woocommerce-truelayer-gateway' );
 				}
 				break;
 			case 'beneficiary_name':
@@ -196,6 +223,11 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 			case 'beneficiary_account_number':
 				if ( ! preg_match( '/^\d{8}$/', $value ) ) {
 					$message = __( 'Beneficiary account number must be 8 digits', 'woocommerce-truelayer-gateway' );
+				}
+				break;
+			case 'beneficiary_reference':
+				if ( strlen( $value ) <= 3 || strlen( $value ) > 18 ) {
+					$message = __( 'Beneficiary reference must be a min 4, max 18 characters', 'woocommerce-truelayer-gateway' );
 				}
 				break;
 			case 'success_uri':
@@ -292,11 +324,11 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$data = array(
 			'amount'                     => (int) floor( $order->get_total() * 100 ),
 			'currency'                   => sanitize_text_field( $this->currency ),
-			'remitter_reference'         => $order->get_order_number(),
+			'remitter_reference'         => $this->get_remitter_reference( $order ),
 			'beneficiary_name'           => sanitize_text_field( $this->beneficiary_name ),
 			'beneficiary_sort_code'      => sanitize_text_field( $this->beneficiary_sort_code ),
 			'beneficiary_account_number' => sanitize_text_field( $this->beneficiary_account_number ),
-			'beneficiary_reference'      => $order->get_order_number(),
+			'beneficiary_reference'      => $this->beneficiary_reference,
 			'redirect_uri'               => $this->get_api_redirect_uri(),
 		);
 
@@ -364,15 +396,17 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 
 		if ( ! 'executed' === strtolower( $status ) ) {
 			wp_safe_redirect( $this->get_webook_redirect_uri( 'pending' ) );
-			wp_die();
+			exit();
 		}
 
 		$order->payment_complete();
-		$order->reduce_order_stock();
+
+		wc_reduce_stock_levels( $order );
+
 		$woocommerce->cart->empty_cart();
 
 		wp_safe_redirect( $this->get_webook_redirect_uri( 'success' ) );
-		wp_die();
+		exit();
 	}
 
 	/**
@@ -387,10 +421,27 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	protected function get_webook_redirect_uri( $status ) {
 		switch ( strtolower( $status ) ) {
 			case 'success':
-				return $this->settings['success_uri'];
+				return $this->success_uri;
 			default:
-				return $this->settings['pending_uri'];
+				return $this->pending_uri;
 		}
+	}
+
+	/**
+	 * Get remitter reference
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param object $order The Order.
+	 *
+	 * @return string
+	 */
+	protected function get_remitter_reference( $order ) {
+		if ( strpos( $this->remitter_reference, '%s' ) !== false ) {
+			return sprintf( $this->remitter_reference, $order->get_order_number() );
+		}
+
+		return $this->remitter_reference;
 	}
 
 	/**
@@ -413,10 +464,10 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 */
 	protected function get_api_urls() {
 		return array(
-			'auth'    => 'yes' === $this->settings['testmode'] ?
+			'auth'    => 'yes' === $this->testmode ?
 				'https://auth.truelayer-sandbox.com' :
 				'https://auth.truelayer.com',
-			'payment' => 'yes' === $this->settings['testmode'] ?
+			'payment' => 'yes' === $this->testmode ?
 				'https://pay-api.truelayer-sandbox.com' :
 				'https://pay-api.truelayer.com',
 		);
@@ -430,9 +481,9 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 * @return Credentials
 	 */
 	protected function get_api_credentials() {
-		$credentials = new Signalfire\TruePayments\Credentials(
-			$this->settings['client_id'],
-			$this->settings['client_secret']
+		$credentials = new Credentials(
+			$this->client_id,
+			$this->client_secret
 		);
 		return $credentials;
 	}
@@ -447,7 +498,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 * @return Request
 	 */
 	protected function get_api_request( $uri ) {
-		return new Signalfire\TruePayments\Request(
+		return new Request(
 			array(
 				'base_uri' => $uri,
 				'timeout'  => 60,
@@ -488,7 +539,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 */
 	protected function get_api_auth() {
 		$request = $this->get_api_auth_request();
-		return new Signalfire\TruePayments\Auth( $request, $this->get_api_credentials() );
+		return new Auth( $request, $this->get_api_credentials() );
 	}
 
 	/**
@@ -517,9 +568,8 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 */
 	protected function get_api_payment( $token, $data ) {
 		$request  = $this->get_api_payment_request();
-		$payment  = new Signalfire\TruePayments\Payment( $request, $token );
+		$payment  = new Payment( $request, $token );
 		$response = $payment->createPayment( $data );
-		$this->write_log( $response );
 		if ( ! isset( $response['error'] ) &&
 			isset( $response['body']['results'][0]['auth_uri'] ) &&
 			isset( $response['body']['results'][0]['simp_id'] ) ) {
@@ -542,7 +592,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 */
 	protected function get_api_payment_status( $token, $payment_id ) {
 		$request  = $this->get_api_payment_request();
-		$payment  = new Signalfire\TruePayments\Payment( $request, $token );
+		$payment  = new Payment( $request, $token );
 		$response = $payment->getPaymentStatus( $payment_id );
 		if ( ! isset( $response['error'] ) && isset( $response['body']['results'][0]['status'] ) ) {
 			return $response['body']['results'][0]['status'];
