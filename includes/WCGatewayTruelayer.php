@@ -353,9 +353,9 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	 */
 	public function is_valid_for_use() {
 		$is_available          = false;
-		$is_available_currency = in_array( get_woocommerce_currency(), $this->available_currencies, true );
+		$is_currency = in_array( get_woocommerce_currency(), $this->available_currencies, true );
 
-		if ( $is_available_currency && $this->has_required_settings() ) {
+		if ( $is_currency && $this->has_required_settings() ) {
 			$is_available = true;
 		}
 
