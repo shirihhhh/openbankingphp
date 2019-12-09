@@ -446,24 +446,24 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$data = array(
 			'amount'                     => (int) floor( $order->get_total() * 100 ),
 			'currency'                   => sanitize_text_field( $this->currency ),
-			'remitter_reference'         => $this->utils->get_remitter_reference( $this->remitter_reference, $order ),
+			'remitter_reference'         => sanitize_text_field( $this->utils->get_remitter_reference( $this->remitter_reference, $order ) ),
 			'beneficiary_name'           => sanitize_text_field( $this->beneficiary_name ),
 			'beneficiary_sort_code'      => sanitize_text_field( $this->beneficiary_sort_code ),
 			'beneficiary_account_number' => sanitize_text_field( $this->beneficiary_account_number ),
-			'beneficiary_reference'      => $this->beneficiary_reference,
+			'beneficiary_reference'      => sanitize_text_field( $this->beneficiary_reference ),
 			'redirect_uri'               => $this->api->get_redirect_uri( get_site_url(), $this->id ),
 		);
 
 		$token = $this->api->get_token( $this->testmode, $this->client_id, $this->client_secret );
 
 		if ( ! $token ) {
-			throw new Exception( 'Unable to auth with TrueLayer API' );
+			throw new Exception( __('Unable to auth with TrueLayer API', 'woocommerce-truelayer-gateway' ) );
 		}
 
 		$payment = $this->api->get_payment( $this->testmode, $token, $data );
 
 		if ( ! $payment ) {
-			throw new Exception( 'Unable to create TrueLayer Payment' );
+			throw new Exception( __( 'Unable to create TrueLayer Payment', 'woocommerce-truelayer-gateway' ) );
 		}
 
 		$order->set_transaction_id( $payment['id'] );
@@ -489,7 +489,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$payment_id = filter_input( INPUT_GET, 'payment_id', FILTER_SANITIZE_STRING );
 
 		if ( empty( $payment_id ) ) {
-			throw new Exception( 'Payment ID not provided' );
+			throw new Exception( __( 'Payment ID not provided', 'woocommerce-truelayer-gateway' ) );
 		}
 
 		$orders = wc_get_orders(
@@ -499,7 +499,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		);
 
 		if ( empty( $orders ) ) {
-			throw new Exception( 'Order not found' );
+			throw new Exception( __( 'Order not found', 'woocommerce-truelayer-gateway' ) );
 		}
 
 		$order = reset( $orders );
@@ -507,13 +507,13 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$token = $this->api->get_token( $this->testmode, $this->client_id, $this->client_secret );
 
 		if ( ! $token ) {
-			throw new Exception( 'Unable to auth with TrueLayer API' );
+			throw new Exception( __( 'Unable to auth with TrueLayer API', 'woocommerce-truelayer-gateway' ) );
 		}
 
 		$status = $this->api->get_payment_status( $this->testmode, $token, $order->get_transaction_id() );
 
 		if ( ! $status ) {
-			throw new Exception( 'Unable to get TrueLayer payment status' );
+			throw new Exception( __( 'Unable to get TrueLayer payment status', 'woocommerce-truelayer-gateway' ) );
 		}
 
 		if ( ! 'executed' === strtolower( $status ) ) {
