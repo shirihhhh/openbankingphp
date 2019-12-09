@@ -6,11 +6,11 @@ Woocommerce Payment Gateway plugin to allow for taking payments via [TrueLayer](
 
 As this plugin is still in developer mode it won't work straight out the box. You will need to use composer to install some files.
 
-1. Git clone the plugin
+1.  Git clone the plugin
 
 ```git clone https://github.com/signalfire/woocommerce-truelayer-gateway.git```
 
-2. Install with composer
+2.  Install with composer
 
 ```composer install```
 
