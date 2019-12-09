@@ -6,6 +6,4 @@ This is very much a work in progress.
 
 ## TODO
 
-*   Add functionality to disable if the required settings aren't present (?)
-*   General tidy up / refactor
 *   Add cron functionality to check status of payment (as no webhooks currently)
