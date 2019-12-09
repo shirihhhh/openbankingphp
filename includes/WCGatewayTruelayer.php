@@ -4,7 +4,7 @@
  *
  * Provides a TrueLayer Payment Gateway.
  *
- * @category WC_Gateway_TrueLayer
+ * @category WCGatewayTrueLayer
  * @package  woocommerce-truelayer-gateway
  * @author   Robert Coster
  * @license  MIT
@@ -13,19 +13,16 @@
 
 namespace Signalfire\Woocommerce\TrueLayer;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	return;
+}
+
 use Exception;
 
 use WC_Admin_Settings;
 use WC_Payment_Gateway;
 
-use Signalfire\TruePayments\Credentials;
-use Signalfire\TruePayments\Request;
-use Signalfire\TruePayments\Auth;
-use Signalfire\TruePayments\Payment;
-
-if ( ! defined( 'ABSPATH' ) ) {
-	return;
-}
+use Signalfire\Woocommerce\TrueLayer\WCGatewayTrueLayerAPI;
 
 /**
  * TrueLayer Payment Gateway
@@ -33,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Provides a TrueLayer Payment Gateway.
  *
  * @category Class
- * @package  WC_Gateway_TrueLayer
+ * @package  WCGatewayTrueLayer
  * @author   Robert Coster
  * @license  MIT
  * @link     https://github.com/signalfire/woocommerce-truelayer-gateway
@@ -62,6 +59,8 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$this->available_countries  = array( 'GB' );
 		$this->available_currencies = (array) apply_filters( 'get_woocommerce_currencies', array( 'GBP' ) );
 
+		$this->api = new WCGatewayTrueLayerAPI();
+
 		$this->supports = array(
 			'products',
 		);
@@ -86,7 +85,6 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 
 		add_action( 'woocommerce_api_truelayer', array( $this, 'webhook' ) );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
-
 	}
 
 	/**
@@ -451,16 +449,16 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 			'beneficiary_sort_code'      => sanitize_text_field( $this->beneficiary_sort_code ),
 			'beneficiary_account_number' => sanitize_text_field( $this->beneficiary_account_number ),
 			'beneficiary_reference'      => $this->beneficiary_reference,
-			'redirect_uri'               => $this->get_api_redirect_uri(),
+			'redirect_uri'               => $this->api->get_redirect_uri( get_site_url(), $this->id ),
 		);
 
-		$token = $this->get_api_token();
+		$token = $this->api->get_token( $this->testmode, $this->client_id, $this->client_secret );
 
 		if ( ! $token ) {
 			throw new Exception( 'Unable to auth with TrueLayer API' );
 		}
 
-		$payment = $this->get_api_payment( $token, $data );
+		$payment = $this->api->get_payment( $this->testmode, $token, $data );
 
 		if ( ! $payment ) {
 			throw new Exception( 'Unable to create TrueLayer Payment' );
@@ -504,13 +502,13 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 
 		$order = reset( $orders );
 
-		$token = $this->get_api_token();
+		$token = $this->api->get_token( $this->testmode, $this->client_id, $this->client_secret );
 
 		if ( ! $token ) {
 			throw new Exception( 'Unable to auth with TrueLayer API' );
 		}
 
-		$status = $this->get_api_payment_status( $token, $order->get_transaction_id() );
+		$status = $this->api->get_payment_status( $this->testmode, $token, $order->get_transaction_id() );
 
 		if ( ! $status ) {
 			throw new Exception( 'Unable to get TrueLayer payment status' );
@@ -561,162 +559,6 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		if ( strpos( $this->remitter_reference, '%s' ) !== false ) {
 			return sprintf( $this->remitter_reference, $order->get_order_number() );
 		}
-
 		return $this->remitter_reference;
-	}
-
-	/**
-	 * Get URL to callback to from payment
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string
-	 */
-	protected function get_api_redirect_uri() {
-		return get_site_url() . '/wc-api/' . $this->id;
-	}
-
-	/**
-	 * Get URIs based on testmode of plugin
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return array
-	 */
-	protected function get_api_urls() {
-		return array(
-			'auth'    => 'yes' === $this->testmode ?
-				'https://auth.truelayer-sandbox.com' :
-				'https://auth.truelayer.com',
-			'payment' => 'yes' === $this->testmode ?
-				'https://pay-api.truelayer-sandbox.com' :
-				'https://pay-api.truelayer.com',
-		);
-	}
-
-	/**
-	 * Get credentials object for API
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return Credentials
-	 */
-	protected function get_api_credentials() {
-		$credentials = new Credentials(
-			$this->client_id,
-			$this->client_secret
-		);
-		return $credentials;
-	}
-
-	/**
-	 * Get Request
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $uri Base URI to make request to.
-	 *
-	 * @return Request
-	 */
-	protected function get_api_request( $uri ) {
-		return new Request(
-			array(
-				'base_uri' => $uri,
-				'timeout'  => 60,
-			)
-		);
-	}
-
-	/**
-	 * Get Request for Auth
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return Request
-	 */
-	protected function get_api_auth_request() {
-		$urls = $this->get_api_urls();
-		return $this->get_api_request( $urls['auth'] );
-	}
-
-	/**
-	 * Get Request for payment
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return Request
-	 */
-	protected function get_api_payment_request() {
-		$urls = $this->get_api_urls();
-		return $this->get_api_request( $urls['payment'] );
-	}
-
-	/**
-	 * Get API auth object
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return Auth
-	 */
-	protected function get_api_auth() {
-		$request = $this->get_api_auth_request();
-		return new Auth( $request, $this->get_api_credentials() );
-	}
-
-	/**
-	 * Get API token
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string
-	 */
-	protected function get_api_token() {
-		$auth     = $this->get_api_auth();
-		$response = $auth->getAccessToken();
-		if ( ! isset( $response['error'] ) && isset( $response['body']['access_token'] ) ) {
-			return $response['body']['access_token'];
-		}
-	}
-
-	/**
-	 * Create and return payment details
-	 *
-	 * @since 1.0.0
-	 * @param string $token API Token.
-	 * @param array  $data  Payment data.
-	 *
-	 * @return array
-	 */
-	protected function get_api_payment( $token, $data ) {
-		$request  = $this->get_api_payment_request();
-		$payment  = new Payment( $request, $token );
-		$response = $payment->createPayment( $data );
-		if ( ! isset( $response['error'] ) &&
-			isset( $response['body']['results'][0]['auth_uri'] ) &&
-			isset( $response['body']['results'][0]['simp_id'] ) ) {
-			return array(
-				'id'  => $response['body']['results'][0]['simp_id'],
-				'uri' => $response['body']['results'][0]['auth_uri'],
-			);
-		}
-	}
-
-	/**
-	 * Get the status of the payment
-	 *
-	 * @param string $token      API token to use.
-	 * @param string $payment_id Payment ID to find status for.
-	 *
-	 * @since 1.0
-	 *
-	 * @return array
-	 */
-	protected function get_api_payment_status( $token, $payment_id ) {
-		$request  = $this->get_api_payment_request();
-		$payment  = new Payment( $request, $token );
-		$response = $payment->getPaymentStatus( $payment_id );
-		if ( ! isset( $response['error'] ) && isset( $response['body']['results'][0]['status'] ) ) {
-			return $response['body']['results'][0]['status'];
-		}
 	}
 }
