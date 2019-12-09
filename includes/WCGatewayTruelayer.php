@@ -208,50 +208,87 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 	public function validate_text_field( $key, $value ) {
 		$message = false;
 
-		switch ( strtolower( $key ) ) {
-			case 'title':
-				if ( strlen( $value ) <= 3 || strlen( $value ) > 15 ) {
-					$message = __( 'Title must be a min 4, max 15 characters', 'woocommerce-truelayer-gateway' );
+		$field_rules = array(
+			'title'                      => array(
+				array(
+					'method'  => function( $value ) {
+						return strlen( $value ) <= 3 || strlen( $value ) > 15; },
+					'message' => __( 'Title must be a min 4, max 15 characters', 'woocommerce-truelayer-gateway' ),
+				),
+			),
+			'remitter_reference'         => array(
+				array(
+					'method'  => function( $value ) {
+						return strlen( $value ) <= 3 || strlen( $value ) > 20; },
+					'message' => __( 'Remitter reference must be a min of 4, max 20 characters', 'woocommerce-truelayer-gateway' ),
+				),
+				array(
+					'method'  => function( $value ) {
+						return substr_count( $value, '%s' ) > 1; },
+					'message' => __( 'Remitter reference can include only 1 string placeholder', 'woocommerce-truelayer-gateway' ),
+				),
+			),
+			'beneficiary_name'           => array(
+				array(
+					'method'  => function( $value ) {
+						return strlen( $value ) <= 3 || strlen( $value ) > 40; },
+					'message' => __( 'Beneficiary name must be a min 4, max 40 characters', 'woocommerce-truelayer-gateway' ),
+				),
+			),
+			'beneficiary_sort_code'      => array(
+				array(
+					'method'  => function( $value ) {
+						$match = preg_match( '/^\d{6}$/', $value );
+						return false === $match || 0 === $match;
+					},
+					'message' => __( 'Beneficiary sort code must be 6 digits (no dashes)', 'woocommerce-truelayer-gateway' ),
+				),
+			),
+			'beneficiary_account_number' => array(
+				array(
+					'method'  => function( $value ) {
+						$match = preg_match( '/^\d{8}$/', $value );
+						return false === $match || 0 === $match;
+					},
+					'message' => __( 'Beneficiary account number must be 8 digits', 'woocommerce-truelayer-gateway' ),
+				),
+			),
+			'beneficiary_reference'      => array(
+				array(
+					'method'  => function( $value ) {
+						return strlen( $value ) <= 3 || strlen( $value ) > 18; },
+					'message' => __( 'Beneficiary reference must be a min 4, max 18 characters', 'woocommerce-truelayer-gateway' ),
+				),
+			),
+			'success_uri'                => array(
+				array(
+					'method'  => function( $value ) {
+						$match = preg_match( '/^\/[A-Za-z0-9_-]*$/', $value );
+						return false === $match || 0 === $match;
+					},
+					'message' => __( 'Success URL must start with / and have characters A-Z, numbers 0-9 and _ (underscore) or - (dash)', 'woocommerce-truelayer-gateway' ),
+				),
+			),
+			'pending_uri'                => array(
+				array(
+					'method'  => function( $value ) {
+						$match = preg_match( '/^\/[A-Za-z0-9_-]*$/', $value );
+						return false === $match || 0 === $match;
+					},
+					'message' => __( 'Pending URL must start with / and have characters A-Z, numbers 0-9 and _ (underscore) or - (dash)', 'woocommerce-truelayer-gateway' ),
+				),
+			),
+		);
+
+		$field_rule = $field_rules[ $key ];
+
+		if ( $field_rule ) {
+			foreach ( $field_rule as $rule ) {
+				if ( $rule['method']($value) ) {
+					$message = $rule['message'];
+					break;
 				}
-				break;
-			case 'remitter_reference':
-				if ( strlen( $value ) <= 3 || strlen( $value ) > 20 ) {
-					$message = __( 'Remitter reference must be a min of 4, max 20 characters', 'woocommerce-truelayer-gateway' );
-				}
-				if ( substr_count( $value, '%s' ) > 1 ) {
-					$message = __( 'Remitter reference can include only 1 string placeholder', 'woocommerce-truelayer-gateway' );
-				}
-				break;
-			case 'beneficiary_name':
-				if ( strlen( $value ) <= 3 || strlen( $value ) > 40 ) {
-					$message = __( 'Beneficiary name must be a min 4, max 40 characters', 'woocommerce-truelayer-gateway' );
-				}
-				break;
-			case 'beneficiary_sort_code':
-				if ( ! preg_match( '/^\d{6}$/', $value ) ) {
-					$message = __( 'Beneficiary sort code must be 6 digits (no dashes)', 'woocommerce-truelayer-gateway' );
-				}
-				break;
-			case 'beneficiary_account_number':
-				if ( ! preg_match( '/^\d{8}$/', $value ) ) {
-					$message = __( 'Beneficiary account number must be 8 digits', 'woocommerce-truelayer-gateway' );
-				}
-				break;
-			case 'beneficiary_reference':
-				if ( strlen( $value ) <= 3 || strlen( $value ) > 18 ) {
-					$message = __( 'Beneficiary reference must be a min 4, max 18 characters', 'woocommerce-truelayer-gateway' );
-				}
-				break;
-			case 'success_uri':
-				if ( ! preg_match( '/^\/[A-Za-z0-9_-]*$/', $value ) ) {
-					$message = __( 'Success URL must start with / and have characters A-Z, numbers 0-9 and _ (underscore) or - (dash)', 'woocommerce-truelayer-gateway' );
-				}
-				break;
-			case 'pending_uri':
-				if ( ! preg_match( '/^\/[A-Za-z0-9_-]*$/', $value ) ) {
-					$message = __( 'Pending URL must start with / and have characters A-Z, numbers 0-9 and _ (underscore) or - (dash)', 'woocommerce-truelayer-gateway' );
-				}
-				break;
+			}
 		}
 
 		if ( $message ) {
