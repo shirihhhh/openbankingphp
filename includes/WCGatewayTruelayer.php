@@ -23,6 +23,7 @@ use WC_Admin_Settings;
 use WC_Payment_Gateway;
 
 use Signalfire\Woocommerce\TrueLayer\WCGatewayTrueLayerAPI;
+use Signalfire\Woocommerce\TrueLayer\WCGatewayTrueLayerUtils;
 
 /**
  * TrueLayer Payment Gateway
@@ -59,7 +60,8 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$this->available_countries  = array( 'GB' );
 		$this->available_currencies = (array) apply_filters( 'get_woocommerce_currencies', array( 'GBP' ) );
 
-		$this->api = new WCGatewayTrueLayerAPI();
+		$this->api   = new WCGatewayTrueLayerAPI();
+		$this->utils = new WCGatewayTrueLayerUtils();
 
 		$this->supports = array(
 			'products',
@@ -444,7 +446,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		$data = array(
 			'amount'                     => (int) floor( $order->get_total() * 100 ),
 			'currency'                   => sanitize_text_field( $this->currency ),
-			'remitter_reference'         => $this->get_remitter_reference( $order ),
+			'remitter_reference'         => $this->utils->get_remitter_reference( $this->remitter_reference, $order ),
 			'beneficiary_name'           => sanitize_text_field( $this->beneficiary_name ),
 			'beneficiary_sort_code'      => sanitize_text_field( $this->beneficiary_sort_code ),
 			'beneficiary_account_number' => sanitize_text_field( $this->beneficiary_account_number ),
@@ -515,7 +517,7 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 		}
 
 		if ( ! 'executed' === strtolower( $status ) ) {
-			wp_safe_redirect( $this->get_webook_redirect_uri( 'pending' ) );
+			wp_safe_redirect( $this->utils->get_webook_redirect_uri( 'pending', $this->success_uri, $this->pending_uri ) );
 			return;
 		}
 
@@ -525,40 +527,8 @@ class WCGatewayTrueLayer extends WC_Payment_Gateway {
 
 		$woocommerce->cart->empty_cart();
 
-		wp_safe_redirect( $this->get_webook_redirect_uri( 'success' ) );
+		wp_safe_redirect( $this->utils->get_webhook_redirect_uri( 'success', $this->success_uri, $this->pending_uri ) );
 	}
 
-	/**
-	 * Get URI to redirect to based on webhook outcome
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $status Status of webhook.
-	 *
-	 * @return string
-	 */
-	protected function get_webook_redirect_uri( $status ) {
-		switch ( strtolower( $status ) ) {
-			case 'success':
-				return $this->success_uri;
-			default:
-				return $this->pending_uri;
-		}
-	}
 
-	/**
-	 * Get remitter reference
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param object $order The Order.
-	 *
-	 * @return string
-	 */
-	protected function get_remitter_reference( $order ) {
-		if ( strpos( $this->remitter_reference, '%s' ) !== false ) {
-			return sprintf( $this->remitter_reference, $order->get_order_number() );
-		}
-		return $this->remitter_reference;
-	}
 }

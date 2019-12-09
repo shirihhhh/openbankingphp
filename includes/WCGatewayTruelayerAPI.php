@@ -45,8 +45,8 @@ class WCGatewayTrueLayerAPI {
 	 *
 	 * @return string
 	 */
-	public function get_redirect_uri( $url, $id ) {
-		return $url . '/wc-api/' . $id;
+	public function get_redirect_uri( $url, $plugin_id ) {
+		return $url . '/wc-api/' . $plugin_id;
 	}
 
 	/**
