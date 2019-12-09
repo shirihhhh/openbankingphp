@@ -23,6 +23,6 @@
     "wp-coding-standards/wpcs": "dev-master"
   },
   "autoload": {
-    "psr-4": {"Signalfire\\Woocommerce\\TrueLayer\\": "includes/"}
+    "psr-4": {"Signalfire\\Woocommerce\\TrueLayer\\": "src/"}
   }  
 }
